@@ -17,7 +17,7 @@ chrome_options.add_argument("--disable-popup-blocking")
 
 
 
-# url=input("TikTok-Page: ")
+url=input("TikTok-Account: ")
 # SCROLL_PAUSE_TIME = 1
 
 # driver = webdriver.Chrome(options=chrome_options)
@@ -46,7 +46,7 @@ api = TikTokApi(custom_verify_fp=verifyFP, use_test_endpoints=True)
 #     last_height = new_height
 
 
-user = api.user(username='danyellebutlercoach')
+user = api.user(username=url)
 user.as_dict # -> dict of the user_object
 # print(user.as_dict)
 # print(user.videos())

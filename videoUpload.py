@@ -151,55 +151,61 @@ def initialize_upload(youtube, video):
  
 class VideoToUpload:
     def __init__(self, title, filename):
-        self.title=title
-        self.description="test description"
+        self.title="test title"
+        self.description=title
         self.privacyStatus=VALID_PRIVACY_STATUSES[1]
         self.categoryId="22",
         self.keywords=''
         self.filename=filename
-        
+        print('title1', self.title)        
 directory = os.fsencode('processed')
 filenames=list()
 data=None
-videoToUpload=None
-videosToUpload=list()
-def getVideoMetaData():
+vidToUpload=None
+# videosToUpload=list()
+data=None
+def getVideoMetaData(vidId):
     print('ICHRENNE')
     keys= list()
     
     with open('videoTitles.json', 'r') as f:
         data=json.load(f)
         keys= data.keys()
-        
-        
+    print('IDDDD', vidId)    
+    title=data[vidId]
+    
+    youtube= build('youtube', 'v3', credentials=credentials)
+    # # app.run(host='localhost', port=3000)1
+    # print('gehe ich hier hin',videosToUpload)
+    # for vid in videosToUpload:
+    #   print('vid', vid)
     for file in os.listdir(directory):
-        filenames.append(os.fsdecode(file))
+      id=os.fsdecode(file).split('.mp4')[0]
+      if id==vidId:
+        videoToUpload= VideoToUpload(title, f"processed/{os.fsdecode(file)}")
+    try:
+        initialize_upload(youtube, videoToUpload)
+        
+    except HTTPError as e:
+        print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
     
-    zipped=zip(keys,filenames)
+  
+    
+    # zipped=zip(keys,filenames)
     
         
-    for key, file in zipped:
-        print('file', file)
-        if key in file:
+    # for key, file in zipped:
+    #     print('file', file)
+    #     if key in file:
         
-            videoToUpload= VideoToUpload(data[key], f"processed/{file}")
+    #         videoToUpload= VideoToUpload(data[key], f"processed/{file}")
             
-            videosToUpload.append(videoToUpload)
-            print('videosToUpload', videosToUpload)
+    #         videosToUpload.append(videoToUpload)
+    #         print('videosToUpload', videosToUpload)
                 
                 
                 
 # getVideoMetaData()
 
-youtube= build('youtube', 'v3', credentials=credentials)
-# # app.run(host='localhost', port=3000)1
-print('gehe ich hier hin',videosToUpload)
-for vid in videosToUpload:
-  print('vid', vid)
-  try:
-      initialize_upload(youtube, vid)
-      print('INIT')
-  except HTTPError as e:
-      print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
-videosToUpload=[] 
+
       

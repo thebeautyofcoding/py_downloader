@@ -129,18 +129,18 @@ for videoLink, title in zipped:
             
             
         
-            if os.path.isfile(f"./processed/final_{info['id']}.mp4"):
+            if os.path.isfile(f"./processed/{info['id']}.mp4"):
                 print("File already downloaded")
             else:
                 if input_audio==None:
                     if os.path.isfile(f"{info['id']}.webm"):
-                        shutil.move(f"{info['id']}.webm", f"./processed/final_{info['id']}.webm")
+                        shutil.move(f"{info['id']}.webm", f"./processed/{info['id']}.webm")
                     else:
-                        shutil.move(f"{info['id']}.mp4", f"./processed/final_{info['id']}.mp4")
+                        shutil.move(f"{info['id']}.mp4", f"./processed/{info['id']}.mp4")
                 else:
                     print('prossing')
                     if input_video and input_audio:    
-                        ffmpeg.concat(input_video, input_audio, v=1, a=1).output(f"./processed/final_{info['id']}.mp4").run()
+                        ffmpeg.concat(input_video, input_audio, v=1, a=1).output(f"./processed/{info['id']}.mp4").run()
     except:
         print('failed')
         
@@ -152,6 +152,9 @@ for videoLink, title in zipped:
 
 
 with open("videoTitles.json", "w") as file:
-    json.dump(videoTitleMapping, file)       
+    json.dump(videoTitleMapping, file)
+    
+    
+    
     
         
