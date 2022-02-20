@@ -103,7 +103,7 @@ for videoLink, title in zipped:
             
             info= ydl.extract_info(videoLink, download=False, process=True)
         
-            print('INFO!!!', info['id'])
+         
             videoTitleMapping[info['id']]=title
             
             

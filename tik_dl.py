@@ -58,8 +58,9 @@ vidCount=vidDic['authorStats']['videoCount']
 vidTitleMapping=dict()
 if int(vidCount) >1:
     for index, video in enumerate(user.videos(count=int(30))):
+        if index <11 and index > 7:
             vidDic=video.as_dict
-            print(vidDic['desc'])
+           
             dlurl=vidDic['video']['downloadAddr']
             with urllib.request.urlopen(dlurl, context=context) as response:
                 with open(f"{vidDic['id']}.mp4", 'wb') as tmp_file:
