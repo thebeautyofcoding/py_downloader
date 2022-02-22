@@ -1,3 +1,4 @@
+from ast import arg
 from TikTokApi import TikTokApi
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -7,6 +8,8 @@ import shutil
 import json
 import os
 import urllib.request
+from threading import Thread
+import sys
 context = ssl._create_unverified_context()
 chrome_options = Options()
 chrome_options.add_argument("start-maximized")
@@ -56,18 +59,58 @@ video=videos[1]
 vidDic=video.as_dict
 vidCount=vidDic['authorStats']['videoCount']
 vidTitleMapping=dict()
+
+_thread_target_key, _thread_args_key, _thread_kwargs_key = (
+    ('_target', '_args', '_kwargs')
+    if sys.version_info >= (3, 0) else
+    ('_Thread__target', '_Thread__args', '_Thread__kwargs')
+)
+
+class ThreadWithReturn(Thread):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._return = None
+    
+    def run(self):
+        target = getattr(self, _thread_target_key)
+        if target is not None:
+            self._return = target(
+                *getattr(self, _thread_args_key),
+                **getattr(self, _thread_kwargs_key)
+            )
+    
+    def join(self, *args, **kwargs):
+        super().join(*args, **kwargs)
+        return self._return
+
+
+def download(dlurl,vidDic):
+    with urllib.request.urlopen(dlurl, context=context) as response:
+        with open(f"{vidDic['id']}.mp4", 'wb') as tmp_file:
+            vidTitleMapping[vidDic['id']]=vidDic['desc']
+            shutil.copyfileobj(response,tmp_file)
+        shutil.move(f"{vidDic['id']}.mp4", f"processed/{vidDic['id']}.mp4")
+        with open("videoTitles.json", "w") as file:
+            json.dump(vidTitleMapping, file) 
+        
+        
+        
+
+     
 if int(vidCount) >1:
     for index, video in enumerate(user.videos(count=int(30))):
         if index <11 and index > 7:
             vidDic=video.as_dict
            
             dlurl=vidDic['video']['downloadAddr']
-            with urllib.request.urlopen(dlurl, context=context) as response:
-                with open(f"{vidDic['id']}.mp4", 'wb') as tmp_file:
-                    vidTitleMapping[vidDic['id']]=vidDic['desc']
-                    shutil.copyfileobj(response,tmp_file)
-                shutil.move(f"{vidDic['id']}.mp4", f"processed/{vidDic['id']}.mp4")
+            downloadThread=Thread(target=download, args=[dlurl, vidDic])
+            downloadThread.start()
+            
+          
+           
+
+
+  
                     
                     
-with open("videoTitles.json", "w") as file:
-    json.dump(vidTitleMapping, file)     
+   

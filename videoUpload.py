@@ -94,40 +94,41 @@ def resumable_upload(insert_request):
       
       
 def initialize_upload(youtube, video):
-      print('initialize')     
-      tags = None
-      if video.keywords:
-        tags = video.keywords.split(",")
+      
+  tags = None
+  if video.keywords:
+    tags = video.keywords.split(",")
 
-      body=dict(
-        snippet=dict(
-          title=video.title,
-          description=video.description,
-          tags=tags,
-          category=video.categoryId
-        ),
-        status=dict(
-          privacyStatus=video.privacyStatus
-        )
-      )
-      # Call the API's videos.insert method to create and upload the video.
-      insert_request = youtube.videos().insert(
-        part=",".join(body.keys()),
-        body=body,
-        # The chunksize parameter specifies the size of each chunk of data, in
-        # bytes, that will be uploaded at a time. Set a higher value for
-        # reliable connections as fewer chunks lead to faster uploads. Set a lower
-        # value for better recovery on less reliable connections.
-        #
-        # Setting "chunksize" equal to -1 in the code below means that the entire
-        # file will be uploaded in a single HTTP request. (If the upload fails,
-        # it will still be retried where it left off.) This is usually a best
-        # practice, but if you're using Python older than 2.6 or if you're
-        # running on App Engine, you should set the chunksize to something like
-        # 1024 * 1024 (1 megabyte).
-        media_body=MediaFileUpload(video.filename, chunksize=-1, resumable=True)
-      )
-      resumable_upload(insert_request)
+  body=dict(
+    snippet=dict(
+      title=video.title,
+      description=video.description,
+      tags=tags,
+      category=video.categoryId
+    ),
+    status=dict(
+      privacyStatus=video.privacyStatus
+    )
+  )
+  # Call the API's videos.insert method to create and upload the video.
+  insert_request = youtube.videos().insert(
+    part=",".join(body.keys()),
+    body=body,
+    # The chunksize parameter specifies the size of each chunk of data, in
+    # bytes, that will be uploaded at a time. Set a higher value for
+    # reliable connections as fewer chunks lead to faster uploads. Set a lower
+    # value for better recovery on less reliable connections.
+    #
+    # Setting "chunksize" equal to -1 in the code below means that the entire
+    # file will be uploaded in a single HTTP request. (If the upload fails,
+    # it will still be retried where it left off.) This is usually a best
+    # practice, but if you're using Python older than 2.6 or if you're
+    # running on App Engine, you should set the chunksize to something like
+    # 1024 * 1024 (1 megabyte).
+    media_body=MediaFileUpload(video.filename, chunksize=-1, resumable=True)
+  )
+  resumable_upload(insert_request)
+  return True
         
 
 
@@ -182,9 +183,13 @@ def getVideoMetaData(vidId):
     for file in os.listdir(directory):
       id=os.fsdecode(file).split('.mp4')[0]
       if id==vidId:
+        
         videoToUpload= VideoToUpload(title, f"processed/{os.fsdecode(file)}")
     try:
+        # time.sleep(60)
+        # print('Waiting 60')
         initialize_upload(youtube, videoToUpload)
+        
         
     except HTTPError as e:
         print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))

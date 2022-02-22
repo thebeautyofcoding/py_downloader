@@ -18,6 +18,9 @@ import argparse
 import requests
 import time
 import os.path
+from threading import Thread
+import queue
+from slugify import slugify
 chrome_options = Options()
 chrome_options.add_argument("start-maximized")
 chrome_options.add_argument("--disable-infobars")
@@ -27,6 +30,9 @@ chrome_options.add_argument("--disable-popup-blocking")
 # disable the banner "Chrome is being controlled by automated test software"
 chrome_options.add_experimental_option("useAutomationExtension", False)
 chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+
+
+
 url=input("Facebook-Page: ")
 # global driver
 driver = webdriver.Chrome( options=chrome_options)
@@ -42,7 +48,7 @@ titles=[]
 
 
 
-SCROLL_PAUSE_TIME = 1
+SCROLL_PAUSE_TIME = 2
   
 videoLinks=set()
 videoTitles=set()
@@ -66,11 +72,11 @@ while True:
     
     
     if new_height == last_height:
-        
         break
     last_height = new_height
     
-
+input_video=None
+input_audio=None
 links = [elem.get_attribute("href") for elem in driver.find_elements(By.XPATH,"//span/div/a")]
 titles=[elem.get_attribute("textContent") for elem in driver.find_elements(By.XPATH,"//span/div/a/span/span")]
 for index,link in enumerate(links):
@@ -79,74 +85,126 @@ for index,link in enumerate(links):
         if url in link:
             videoLinks.add(link)
     
-for index,title in enumerate(titles):
-    if index < 3:
-     videoTitles.add(title)
-     
-print("LÄNGELINKS", len(videoLinks))
-print('LÄNGETITLE', len(videoTitles))
+
+
 jsonVideoTitleMapping=''
 videoTitleMapping=dict()
-zipped=zip(videoLinks, videoTitles)
-for videoLink, title in zipped:
-    input_video=None
-    input_audio=None
-    # if index+1==len(videoLinks):
-    #     break
-    print('videoLInksLoop')
-    ydl_opts = {"format":"bestvideo/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
-    try:
-            
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            
-            ydl.download([videoLink])
-            
-            info= ydl.extract_info(videoLink, download=False, process=True)
-        
-         
-            videoTitleMapping[info['id']]=title
-            
-            
-            
+info=dict()
 
-                
-                
+
+
+_thread_target_key, _thread_args_key, _thread_kwargs_key = (
+    ('_target', '_args', '_kwargs')
+    if sys.version_info >= (3, 0) else
+    ('_Thread__target', '_Thread__args', '_Thread__kwargs')
+)
+
+class ThreadWithReturn(Thread):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._return = None
+    
+    def run(self):
+        target = getattr(self, _thread_target_key)
+        if target is not None:
+            self._return = target(
+                *getattr(self, _thread_args_key),
+                **getattr(self, _thread_kwargs_key)
+            )
+    
+    def join(self, *args, **kwargs):
+        super().join(*args, **kwargs)
+        return self._return
+
+
+def downloadVideo(ydl_opts):
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            input_video=None
+            ydl.download([videoLink])
+
+            info= ydl.extract_info(videoLink, download=False, process=True)
+            
+            
+            slug=info['webpage_url'].split('/')[-3]
+            slug=slug.replace('-', ' ')
+            videoTitleMapping[info['id']]=slug
+            
             if os.path.isfile(f"{info['id']}.mp4"):
                 input_video = ffmpeg.input(f"{info['id']}.mp4")
+                
+                return [info,input_video]
             else:
                 input_video = ffmpeg.input(f"{info['id']}.webm")
-                    
-                    
-        ydl_opts = {"format":"bestaudio/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
+                return [info,input_video]
+            
+            
+def downloadAudio(ydl_opts):
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        print('VIDEOLINKAUDI', videoLink)
+        ydl.download([videoLink])
+            
+        return ydl.extract_info(videoLink, download=False, process=True)
+        
 
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([videoLink])
-            print(videoLink)
-            info= ydl.extract_info(videoLink, download=False, process=True)
-            
-            if os.path.isfile(f"{info['id']}.m4a"):
-                input_audio = ffmpeg.input(f"{info['id']}.m4a")
-            
-            
-        
-            if os.path.isfile(f"./processed/{info['id']}.mp4"):
-                print("File already downloaded")
+def processing(info, input_video):
+    input_audio=None
+    if os.path.isfile(f"{info['id']}.m4a"):
+            input_audio = ffmpeg.input(f"{info['id']}.m4a")
+    
+    if os.path.isfile(f"./processing/{info['id']}.mp4"):
+        print("File already downloaded")
+    else:
+        if input_audio==None:
+            if os.path.isfile(f"{info['id']}.webm"):
+                # shutil.move(f"{info['id']}.webm", f"./merged/{info['id']}.webm")
+                shutil.move(f"./merged/{info['id']}.mp4", f"./processed/{info['id']}.mp4")
             else:
-                if input_audio==None:
-                    if os.path.isfile(f"{info['id']}.webm"):
-                        shutil.move(f"{info['id']}.webm", f"./processed/{info['id']}.webm")
-                    else:
-                        shutil.move(f"{info['id']}.mp4", f"./processed/{info['id']}.mp4")
-                else:
-                    print('prossing')
-                    if input_video and input_audio:    
-                        ffmpeg.concat(input_video, input_audio, v=1, a=1).output(f"./processed/{info['id']}.mp4").run()
-    except:
-        print('failed')
+                # shutil.move(f"{info['id']}.mp4", f"./merged/{info['id']}.mp4")
+                shutil.move(f"./{info['id']}.mp4", f"./processed/{info['id']}.mp4")
+        else:
+            print('prossing')
+            if input_video and input_audio:    
+                ffmpeg.concat(input_video, input_audio, v=1, a=1).output(f"./processing/{info['id']}.mp4").run()
+                shutil.move(f"./processing/{info['id']}.mp4", f"./processed/{info['id']}.mp4")
+                # os.rename(f"./processed/{info['id']}.mp4",f"./processed/{info['id']}.tmp")
+                
+# zipped=zip(videoLinks, videoTitles)
+for videoLink in videoLinks:
+
+    
+    
+    
+    # if index+1==len(videoLinks):
+    #     break
+    
+
+    # Wait until both Func1 and Func2 have finished
+    
+    ydl_video = {"format":"bestvideo/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
+
+    ydl_audio = {"format":"bestaudio/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
+     
+    threads=[ThreadWithReturn(target=downloadAudio, args=[ydl_audio]), ThreadWithReturn(target=downloadVideo, args=[ydl_video ])]   
+    try:  
+        threads[0].start()
+        threads[0].join()
+        
+        threads[1].start()
+        
+        th=Thread(target=processing, args=[threads[1].join()[0],threads[1].join()[1]])
+        th.start()
+        
+    except Exception as e:
+        print('Error!!: ', e)
         
         
-    finally:
-        print('Done')
+    
+
+    
+            
+        
+                        
+
          
   
 
