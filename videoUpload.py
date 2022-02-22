@@ -94,7 +94,7 @@ def resumable_upload(insert_request):
       
       
 def initialize_upload(youtube, video):
-      
+    
   tags = None
   if video.keywords:
     tags = video.keywords.split(",")
@@ -151,46 +151,50 @@ def initialize_upload(youtube, video):
 #     exit("Please specify a valid file using the --file= parameter.")
  
 class VideoToUpload:
-    def __init__(self, title, filename):
-        self.title="test title"
-        self.description=title
+    def __init__(self, title, description,tags,filename):
+        self.title=title
+        self.description=description
         self.privacyStatus=VALID_PRIVACY_STATUSES[1]
         self.categoryId="22",
-        self.keywords=''
+        self.keywords=tags
         self.filename=filename
         print('title1', self.title)        
 directory = os.fsencode('processed')
 filenames=list()
-data=None
+videos=None
 vidToUpload=None
 # videosToUpload=list()
-data=None
+
 def getVideoMetaData(vidId):
-    print('ICHRENNE')
+    global videos
     keys= list()
     
     with open('videoTitles.json', 'r') as f:
-        data=json.load(f)
-        keys= data.keys()
-    print('IDDDD', vidId)    
-    title=data[vidId]
+        videos=json.load(f)
+        # for video in data:
+          # keys= data.keys()
+     
+    
     
     youtube= build('youtube', 'v3', credentials=credentials)
     # # app.run(host='localhost', port=3000)1
     # print('gehe ich hier hin',videosToUpload)
     # for vid in videosToUpload:
     #   print('vid', vid)
-    for file in os.listdir(directory):
-      id=os.fsdecode(file).split('.mp4')[0]
-      if id==vidId:
-        
-        videoToUpload= VideoToUpload(title, f"processed/{os.fsdecode(file)}")
+    # for file in os.listdir(directory):
+    #   id=os.fsdecode(file).split('.mp4')[0]
+      
+      
     try:
         # time.sleep(60)
         # print('Waiting 60')
-        initialize_upload(youtube, videoToUpload)
         
-        
+      for data in videos:
+          if data['id']==vidId:
+            videoToUpload= VideoToUpload(title=data['title'], description=data['description'],tags=data['tags'],filename=f"processed/{vidId}.mp4")
+            initialize_upload(youtube, videoToUpload)
+      
+      
     except HTTPError as e:
         print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
     

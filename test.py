@@ -12,7 +12,7 @@ import os
 import threading
 import videoUpload
 
-
+from threading import Thread
 
 
 
@@ -37,6 +37,14 @@ class  Handler(FileSystemEventHandler):
                     vidId= filename.split('.mp4')[0]
                     
                     videoUpload.getVideoMetaData(vidId)
+                    
+                    # th=Thread(target=videoUpload.getVideoMetaData, args=[vidId])
+                    # th.start()
+                    
+                    
+                    
+                    
+                    
                     shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
                     # file_size=None
                     # if os.path.isfile(src):

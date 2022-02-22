@@ -21,6 +21,7 @@ import os.path
 from threading import Thread
 import queue
 from slugify import slugify
+import threading
 chrome_options = Options()
 chrome_options.add_argument("start-maximized")
 chrome_options.add_argument("--disable-infobars")
@@ -48,13 +49,13 @@ titles=[]
 
 
 
-SCROLL_PAUSE_TIME = 2
+SCROLL_PAUSE_TIME = 0.5
   
 videoLinks=set()
 videoTitles=set()
 
 info=dict()
-videoTitleMapping=dict()
+
 
 
 while True:
@@ -116,31 +117,49 @@ class ThreadWithReturn(Thread):
         super().join(*args, **kwargs)
         return self._return
 
+videoList=list()
+
+def writeVideoData(videoList):
+    with open("videoTitles.json", "w") as file:
+        json.dump(videoList, file)
 
 def downloadVideo(ydl_opts):
+    global videoList
+    
+   
+    
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            input_video=None
-            ydl.download([videoLink])
+        input_video=None
+        ydl.download([videoLink])
 
-            info= ydl.extract_info(videoLink, download=False, process=True)
+        info= ydl.extract_info(videoLink, download=False, process=True)
+        
+        videoTitleMapping=dict()
+        slug=info['webpage_url'].split('/')[-3]
+        slug=slug.replace('-', ' ')
+        videoTitleMapping['id']=info['id']
+        title=input('Provide a title or keep the default one: ')
+        videoTitleMapping['title']=title
+        desc=input('Provide a description or keep the default one: ')
+        videoTitleMapping['description']=desc
+        tags=input('Provide tags (comma-seperated) or keep the default one: ')
+        videoTitleMapping['tags']=tags
+        print('videoTitleMapping',videoTitleMapping)
+       
+        videoList.append(videoTitleMapping)
+       
+        if os.path.isfile(f"{info['id']}.mp4"):
+            input_video = ffmpeg.input(f"{info['id']}.mp4")
             
-            
-            slug=info['webpage_url'].split('/')[-3]
-            slug=slug.replace('-', ' ')
-            videoTitleMapping[info['id']]=slug
-            
-            if os.path.isfile(f"{info['id']}.mp4"):
-                input_video = ffmpeg.input(f"{info['id']}.mp4")
-                
-                return [info,input_video]
-            else:
-                input_video = ffmpeg.input(f"{info['id']}.webm")
-                return [info,input_video]
+            return [info,input_video,videoList]
+        else:
+            input_video = ffmpeg.input(f"{info['id']}.webm")
+            return [info,input_video,videoList]
             
             
 def downloadAudio(ydl_opts):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        print('VIDEOLINKAUDI', videoLink)
+        
         ydl.download([videoLink])
             
         return ydl.extract_info(videoLink, download=False, process=True)
@@ -169,16 +188,9 @@ def processing(info, input_video):
                 # os.rename(f"./processed/{info['id']}.mp4",f"./processed/{info['id']}.tmp")
                 
 # zipped=zip(videoLinks, videoTitles)
+ 
 for videoLink in videoLinks:
 
-    
-    
-    
-    # if index+1==len(videoLinks):
-    #     break
-    
-
-    # Wait until both Func1 and Func2 have finished
     
     ydl_video = {"format":"bestvideo/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
 
@@ -190,27 +202,28 @@ for videoLink in videoLinks:
         threads[0].join()
         
         threads[1].start()
+        threads[1].join()
         
         th=Thread(target=processing, args=[threads[1].join()[0],threads[1].join()[1]])
         th.start()
         
+       
+        
+        
+       
+  
+       
+        
+        
     except Exception as e:
         print('Error!!: ', e)
         
-        
-    
 
     
-            
-        
-                        
-
-         
-  
+writingTh=Thread(target=writeVideoData, args=[threads[1].join()[2]])
+writingTh.start()
 
 
-with open("videoTitles.json", "w") as file:
-    json.dump(videoTitleMapping, file)
     
     
     
