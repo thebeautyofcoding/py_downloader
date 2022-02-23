@@ -210,6 +210,7 @@ for videoLink in videoLinks:
         
         th=Thread(target=processing, args=[threads[1].join()[0],threads[1].join()[1]])
         th.start()
+        th.join()
         
        
         
