@@ -130,40 +130,21 @@ def initialize_upload(youtube, video):
   resumable_upload(insert_request)
   return True
         
-
-
-
-    
-#   argparser.add_argument("--file", required=True, help="Video file to upload")
-#   argparser.add_argument("--title", help="Video title", default="Test Title")
-#   argparser.add_argument("--description", help="Video description",
-#     default="Test Description")
-#   argparser.add_argument("--category", default="22",
-#     help="Numeric video category. " +
-#       "See https://developers.google.com/youtube/v3/docs/videoCategories/list")
-#   argparser.add_argument("--keywords", help="Video keywords, comma separated",
-#     default="")
-#   argparser.add_argument("--privacyStatus", choices=VALID_PRIVACY_STATUSES,
-#     default=VALID_PRIVACY_STATUSES[0], help="Video privacy status.")
-#   args = argparser.parse_args()
-
-#   if not os.path.exists(args.file):
-#     exit("Please specify a valid file using the --file= parameter.")
  
 class VideoToUpload:
-    def __init__(self, title, description,tags,filename):
+    def __init__(self,title,description,tags,filename):
         self.title=title
         self.description=description
         self.privacyStatus=VALID_PRIVACY_STATUSES[1]
         self.categoryId="22",
         self.keywords=tags
         self.filename=filename
-        print('title1', self.title)        
-directory = os.fsencode('processed')
+        print('title1', self.title)
+                
 filenames=list()
 videos=None
 vidToUpload=None
-# videosToUpload=list()
+
 
 def getVideoMetaData(vidId):
     global videos
@@ -171,50 +152,20 @@ def getVideoMetaData(vidId):
     
     with open('videoTitles.json', 'r') as f:
         videos=json.load(f)
-        # for video in data:
-          # keys= data.keys()
-     
     
     
-    youtube= build('youtube', 'v3', credentials=credentials)
-    # # app.run(host='localhost', port=3000)1
-    # print('gehe ich hier hin',videosToUpload)
-    # for vid in videosToUpload:
-    #   print('vid', vid)
-    # for file in os.listdir(directory):
-    #   id=os.fsdecode(file).split('.mp4')[0]
-      
-      
-    try:
-        # time.sleep(60)
-        # print('Waiting 60')
-        
+    youtube= build('youtube', 'v3', credentials=credentials)  
+    try: 
       for data in videos:
           if data['id']==vidId:
+                
             videoToUpload= VideoToUpload(title=data['title'], description=data['description'],tags=data['tags'],filename=f"processed/{vidId}.mp4")
             initialize_upload(youtube, videoToUpload)
       
       
     except HTTPError as e:
         print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
-    
-  
-    
-    # zipped=zip(keys,filenames)
-    
-        
-    # for key, file in zipped:
-    #     print('file', file)
-    #     if key in file:
-        
-    #         videoToUpload= VideoToUpload(data[key], f"processed/{file}")
-            
-    #         videosToUpload.append(videoToUpload)
-    #         print('videosToUpload', videosToUpload)
-                
-                
-                
-# getVideoMetaData()
+
 
 
       

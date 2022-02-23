@@ -26,7 +26,7 @@ url=input("TikTok-Account: ")
 # driver = webdriver.Chrome(options=chrome_options)
 # driver.implicitly_wait(10)
 # driver.get(url)
-verifyFP='verify_71a37c19940122ac0989cadd0e62bf3c'
+verifyFP='verify_71639d688d207a308842f7d4ec6d2013'
 api = TikTokApi(custom_verify_fp=verifyFP, use_test_endpoints=True)
 
 # while True:
@@ -58,7 +58,8 @@ videos=list(videos)
 video=videos[1]
 vidDic=video.as_dict
 vidCount=vidDic['authorStats']['videoCount']
-vidTitleMapping=dict()
+vidDataList=list()
+
 
 _thread_target_key, _thread_args_key, _thread_kwargs_key = (
     ('_target', '_args', '_kwargs')
@@ -85,13 +86,15 @@ class ThreadWithReturn(Thread):
 
 
 def download(dlurl,vidDic):
+    
     with urllib.request.urlopen(dlurl, context=context) as response:
         with open(f"{vidDic['id']}.mp4", 'wb') as tmp_file:
-            vidTitleMapping[vidDic['id']]=vidDic['desc']
+            
+            
             shutil.copyfileobj(response,tmp_file)
         shutil.move(f"{vidDic['id']}.mp4", f"processed/{vidDic['id']}.mp4")
         with open("videoTitles.json", "w") as file:
-            json.dump(vidTitleMapping, file) 
+            json.dump(vidDataList, file) 
         
         
         
@@ -101,10 +104,30 @@ if int(vidCount) >1:
     for index, video in enumerate(user.videos(count=int(30))):
         if index <11 and index > 7:
             vidDic=video.as_dict
-           
             dlurl=vidDic['video']['downloadAddr']
+            vidTitleMapping=dict()
+            vidTitleMapping['id']=vidDic['id']
+            vidTitleMapping['description']=vidDic['desc']
+            desc=input('Please provide a description or the default one will be used: ')
+            title=input('Please provide a title or the default one will be used: ')
+            tags=input('Please provide tags or none will be used: ')
+            if title !='':
+                vidTitleMapping['title']=title
+            else:
+                vidTitleMapping['title']='standard title'
+            if desc !='':     
+                vidTitleMapping['description']=desc
+            
+            if tags!='':   
+                vidTitleMapping['tags']=tags
+            else:
+                vidTitleMapping['tags']=''
+                
+            vidDataList.append(vidTitleMapping)
             downloadThread=Thread(target=download, args=[dlurl, vidDic])
             downloadThread.start()
+            
+            
             
           
            

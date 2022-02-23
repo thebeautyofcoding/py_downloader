@@ -56,8 +56,6 @@ videoTitles=set()
 
 info=dict()
 
-
-
 while True:
     last_height = driver.execute_script("return document.body.scrollHeight")
     
@@ -69,8 +67,6 @@ while True:
     time.sleep(SCROLL_PAUSE_TIME)
     # Calculate new scroll height and compare with last scroll height
     new_height = driver.execute_script("return document.body.scrollHeight")
-   
-    
     
     if new_height == last_height:
         break
@@ -86,7 +82,6 @@ for index,link in enumerate(links):
         if url in link:
             videoLinks.add(link)
     
-
 
 jsonVideoTitleMapping=''
 videoTitleMapping=dict()
@@ -127,7 +122,6 @@ def downloadVideo(ydl_opts):
     global videoList
     
    
-    
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         input_video=None
         ydl.download([videoLink])
@@ -139,12 +133,23 @@ def downloadVideo(ydl_opts):
         slug=slug.replace('-', ' ')
         videoTitleMapping['id']=info['id']
         title=input('Provide a title or keep the default one: ')
-        videoTitleMapping['title']=title
+        
+        if title != '':
+            videoTitleMapping['title']=title
+        else:
+             videoTitleMapping['title']='standard title'
+        
         desc=input('Provide a description or keep the default one: ')
-        videoTitleMapping['description']=desc
+        if desc != '':
+            videoTitleMapping['description']=desc
+        else:
+            videoTitleMapping['description']=slug
+        
+        
+        
         tags=input('Provide tags (comma-seperated) or keep the default one: ')
         videoTitleMapping['tags']=tags
-        print('videoTitleMapping',videoTitleMapping)
+        
        
         videoList.append(videoTitleMapping)
        
@@ -191,7 +196,6 @@ def processing(info, input_video):
  
 for videoLink in videoLinks:
 
-    
     ydl_video = {"format":"bestvideo/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
 
     ydl_audio = {"format":"bestaudio/best","outtmpl":"%(id)s.%(ext)s", "ignoreerrors":True}
