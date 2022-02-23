@@ -139,7 +139,7 @@ class VideoToUpload:
         self.categoryId="22",
         self.keywords=tags
         self.filename=filename
-        print('title1', self.title)
+        
                 
 filenames=list()
 videos=None

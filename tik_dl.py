@@ -128,6 +128,8 @@ if int(vidCount) >1:
             vidDataList.append(vidTitleMapping)
             downloadThread=Thread(target=download, args=[dlurl, vidDic])
             downloadThread.start()
+            downloadThread.join()
+            
             
     
     with open("videoTitles.json", "w") as file:

@@ -30,7 +30,7 @@ folder_destination=os.getcwd()+'\\uploaded\\'
 
 def onCreatedMethod():
     for filename in os.listdir(folder_to_track):
-        if '.mp4' in filename:
+        if filename and '.mp4' in filename:
           
             
             vidId= filename.split('.mp4')[0]
@@ -43,8 +43,8 @@ def onCreatedMethod():
             
             
             
-            if os.path.isfile(f"./processed/{filename}"):
-                shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
+            
+            shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
             
           
                     
@@ -84,10 +84,10 @@ if __name__=='__main__':
                 if len(os.listdir(folder_to_track))== 0:
                     break
                 
-            
+    
             
     except KeyboardInterrupt:
         
         observer.stop()
         
-        
+    observer.join()   
