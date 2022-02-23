@@ -31,16 +31,14 @@ folder_destination=os.getcwd()+'\\uploaded\\'
 def onCreatedMethod():
     for filename in os.listdir(folder_to_track):
         if '.mp4' in filename:
-            # print('number of current threads is ', threading.active_count())
-            src = filename
-            new_dest = folder_destination  + filename
+          
+            
             vidId= filename.split('.mp4')[0]
             
             
             videoUpload.getVideoMetaData(vidId)
             
-            # th=Thread(target=videoUpload.getVideoMetaData, args=[vidId])
-            # th.start()
+         
             
             
             
@@ -48,21 +46,7 @@ def onCreatedMethod():
             if os.path.isfile(f"./processed/{filename}"):
                 shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
             
-            # file_size=None
-            # if os.path.isfile(src):
-            #     while file_size != os.path.getsize(src):
-            #         file_size = os.path.getsize(folder_to_track)
-            #         # print('Im WHILE Loop test.py')
-
-            #     while not file_done:
-            #         try:
-            #             shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
-            #             file_done = True
-            #         except:
-
-
-            #             return True 
-                    # +     
+          
                     
 event_handler = Handler()
 observer = Observer()                           
@@ -74,16 +58,8 @@ def runObserver():
     observer.start()
     while True:
         time.sleep(1)
-        # print(threading.currentThread().name)
+        
 
-    
-# try:
-#     while True:
-     
-#         time.sleep(1)
-# except KeyboardInterrupt:
-#     observer.stop()
-# observer.join()
 
 if __name__=='__main__':
     background_thread = threading.Thread(target=runObserver, args=())
