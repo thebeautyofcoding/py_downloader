@@ -92,9 +92,10 @@ def download(dlurl,vidDic):
             
             
             shutil.copyfileobj(response,tmp_file)
-        shutil.move(f"{vidDic['id']}.mp4", f"processed/{vidDic['id']}.mp4")
-        with open("videoTitles.json", "w") as file:
-            json.dump(vidDataList, file) 
+        shutil.move(f"{vidDic['id']}.mp4", f"processing/{vidDic['id']}.mp4")
+        
+        for filename in os.listdir(os.getcwd()+'\\processing\\'):
+            shutil.move(f"processing/{filename}", f"processed/{filename}")
         
         
         
@@ -122,10 +123,15 @@ if int(vidCount) >1:
                 vidTitleMapping['tags']=tags
             else:
                 vidTitleMapping['tags']=''
-                
+            
+             
             vidDataList.append(vidTitleMapping)
             downloadThread=Thread(target=download, args=[dlurl, vidDic])
             downloadThread.start()
+            
+    
+    with open("videoTitles.json", "w") as file:
+        json.dump(vidDataList, file) 
             
             
             
