@@ -70,6 +70,7 @@ def resumable_upload(insert_request):
       if response is not None:
         if 'id' in response:
           print ("Video id '%s' was successfully uploaded." % response['id'])
+          return True
         else:
           exit("The upload failed with an unexpected response: %s" % response)
     except HTTPError as e:
@@ -127,8 +128,8 @@ def initialize_upload(youtube, video):
     # 1024 * 1024 (1 megabyte).
     media_body=MediaFileUpload(video.filename, chunksize=-1, resumable=True)
   )
-  resumable_upload(insert_request)
-  return True
+  return resumable_upload(insert_request)
+ 
         
  
 class VideoToUpload:
@@ -155,12 +156,17 @@ def getVideoMetaData(vidId):
     
     
     youtube= build('youtube', 'v3', credentials=credentials)  
+    
+   
+    print('DONSO')
     try: 
       for data in videos:
           if data['id']==vidId:
                 
             videoToUpload= VideoToUpload(title=data['title'], description=data['description'],tags=data['tags'],filename=f"processed/{vidId}.mp4")
             initialize_upload(youtube, videoToUpload)
+           
+            
       
       
     except HTTPError as e:
