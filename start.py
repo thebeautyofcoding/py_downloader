@@ -1,93 +1,18 @@
-import re
-import sys
-import time
-import logging
-import shutil
-import ssl
-import urllib.request
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import os
-# import videoUpload
-import threading
 
+fbOrTik=input('Please choose where to download videos from. Type "1" for Facebook or "2" for TikTok: ')
+if fbOrTik=='1':
+    import fb_dl
 
-from threading import Thread
-
-
-
-import videoUpload
-
-class  Handler(FileSystemEventHandler):
+elif fbOrTik=='2':
+    import tik_dl
     
-    def on_created(self, event):
-        onCreatedMethod()
-        
-                  
-folder_to_track=os.getcwd()+'\\processed\\'
+else:
+    print('You can only choose between "1" or "2". No other options available. Which option do you choose: \n')
+    fbOrTik=input('Which option "1" or "2"?: ')
+    if fbOrTik=='1':
+        import fb_dl
 
-folder_destination=os.getcwd()+'\\uploaded\\'                     
-
-def onCreatedMethod():
-    for filename in os.listdir(folder_to_track):
-        if filename and '.mp4' in filename:
-          
-            
-            vidId= filename.split('.mp4')[0]
-            
-            
-            videoUpload.getVideoMetaData(vidId)
-            
-         
-            
-            
-            
-            
-            
-            shutil.move(f"./processed/{filename}", f"./uploaded/{filename}")
-            
-          
-                    
-event_handler = Handler()
-observer = Observer()                           
-def runObserver():           
+    elif fbOrTik=='2':
+        import tik_dl
     
     
-    observer.schedule(event_handler, folder_to_track, recursive=True)
-
-    observer.start()
-    while True:
-        time.sleep(1)
-        
-
-
-if __name__=='__main__':
-    background_thread = threading.Thread(target=runObserver, args=())
-    background_thread.daemon = True
-    background_thread.start()
-    tikTokOrFacebook=input('You want to download videos from Facebook or TikTok? Type "Facebook" or "TikTok": ')
-    
-    
-    try:
-        while True:
-            if tikTokOrFacebook=='Facebook':
-                import fb_dl
-                
-                onCreatedMethod()
-                if len(os.listdir(folder_to_track))== 0:
-                    break
-                
-            else:
-                import tik_dl
-                
-                onCreatedMethod()
-                if len(os.listdir(folder_to_track))== 0:
-                    break
-                
-    
-            
-    except KeyboardInterrupt:
-        
-        observer.stop()
-        
-    observer.join()   

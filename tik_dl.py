@@ -10,6 +10,7 @@ import os
 import urllib.request
 from threading import Thread
 import sys
+from videoUpload import getVideoMetaData
 context = ssl._create_unverified_context()
 chrome_options = Options()
 chrome_options.add_argument("start-maximized")
@@ -21,38 +22,14 @@ chrome_options.add_argument("--disable-popup-blocking")
 
 
 url=input("TikTok-Account: ")
-# SCROLL_PAUSE_TIME = 1
 
-# driver = webdriver.Chrome(options=chrome_options)
-# driver.implicitly_wait(10)
-# driver.get(url)
-verifyFP='verify_71639d688d207a308842f7d4ec6d2013'
+verifyFP='verify_l00q2i8m_gVL5oYOe_Xbzx_40AD_8qOL_yT4jmjBcrF2U'
 api = TikTokApi(custom_verify_fp=verifyFP, use_test_endpoints=True)
-
-# while True:
-#     last_height = driver.execute_script("return document.body.scrollHeight")
-    
-      
-#     # Scroll down to bottom
-#     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
-
-#     time.sleep(SCROLL_PAUSE_TIME)
-#     # Calculate new scroll height and compare with last scroll height
-#     new_height = driver.execute_script("return document.body.scrollHeight")
-   
-    
-    
-#     if new_height == last_height:
-        
-#         break
-#     last_height = new_height
 
 
 user = api.user(username=url)
 user.as_dict # -> dict of the user_object
-# print(user.as_dict)
-# print(user.videos())
+
 videos= user.videos()
 videos=list(videos)
 video=videos[1]
@@ -60,29 +37,6 @@ vidDic=video.as_dict
 vidCount=vidDic['authorStats']['videoCount']
 vidDataList=list()
 
-
-_thread_target_key, _thread_args_key, _thread_kwargs_key = (
-    ('_target', '_args', '_kwargs')
-    if sys.version_info >= (3, 0) else
-    ('_Thread__target', '_Thread__args', '_Thread__kwargs')
-)
-
-class ThreadWithReturn(Thread):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._return = None
-    
-    def run(self):
-        target = getattr(self, _thread_target_key)
-        if target is not None:
-            self._return = target(
-                *getattr(self, _thread_args_key),
-                **getattr(self, _thread_kwargs_key)
-            )
-    
-    def join(self, *args, **kwargs):
-        super().join(*args, **kwargs)
-        return self._return
 
 
 def download(dlurl,vidDic):
@@ -97,10 +51,7 @@ def download(dlurl,vidDic):
         for filename in os.listdir(os.getcwd()+'\\processing\\'):
             shutil.move(f"processing/{filename}", f"processed/{filename}")
         
-        
-        
-
-     
+         
 if int(vidCount) >1:
     for index, video in enumerate(user.videos(count=int(30))):
         if index <11 and index > 7:
@@ -109,13 +60,15 @@ if int(vidCount) >1:
             vidTitleMapping=dict()
             vidTitleMapping['id']=vidDic['id']
             vidTitleMapping['description']=vidDic['desc']
-            desc=input('Please provide a description or the default one will be used: ')
-            title=input('Please provide a title or the default one will be used: ')
+            standardTitle='standard title'
+            title=input(f'Please provide a title or the default one ("{standardTitle}") will be used: ')
+            desc=input(f'Please provide a description or the default one ({vidTitleMapping["description"]}) will be used: ')
+            
             tags=input('Please provide tags or none will be used: ')
             if title !='':
                 vidTitleMapping['title']=title
             else:
-                vidTitleMapping['title']='standard title'
+                vidTitleMapping['title']=standardTitle
             if desc !='':     
                 vidTitleMapping['description']=desc
             
@@ -126,14 +79,15 @@ if int(vidCount) >1:
             
              
             vidDataList.append(vidTitleMapping)
-            downloadThread=Thread(target=download, args=[dlurl, vidDic])
-            downloadThread.start()
-            downloadThread.join()
+            with open("videoTitles.json", "w") as file:
+                json.dump(vidDataList, file) 
+            download(dlurl, vidDic)
+            getVideoMetaData(vidTitleMapping['id'])
+            shutil.move(f"processed/{vidTitleMapping['id']}.mp4", f"./uploaded/{vidTitleMapping['id']}.mp4")
             
             
     
-    with open("videoTitles.json", "w") as file:
-        json.dump(vidDataList, file) 
+    
             
             
             
